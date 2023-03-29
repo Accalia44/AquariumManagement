@@ -11,8 +11,9 @@ namespace DAL.Entities
 
 		public Picture(){}
 
-		public Picture(string aqurium, string description, string contentType)
+		public Picture(string id, string aqurium, string description, string contentType)
 		{
+			PictureID = id;
 			Aquarium = aqurium;
 			Description = description;
 			ContentType = contentType;
