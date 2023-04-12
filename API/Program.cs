@@ -24,11 +24,12 @@ builder.Services.AddOpenApiDocument(doc =>
     );
 
 });
+/*
 
+builder.Services.AddScoped<IHttpContextAccessor, HttpContextAccessor>();*/
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<GlobalService>();
-builder.Services.AddScoped<IHttpContextAccessor, HttpContextAccessor>();
-
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

@@ -32,9 +32,11 @@
   <ItemGroup>
     <None Remove="DBTests\" />
     <None Remove="ServiceTest\" />
+    <None Remove="ControllerTests\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="DBTests\" />
     <Folder Include="ServiceTest\" />
+    <Folder Include="ControllerTests\" />
   </ItemGroup>
 </Project>

@@ -11,7 +11,7 @@ namespace Tests
 		User testUserLogin = new User();
 		 
 		[SetUp]
-		public async Task SetUp()
+		public void SetUp()
 		{
             testUserLogin = new User("testUserLogin@mail.com", "Test", "Test", "TestPW123");
 		}

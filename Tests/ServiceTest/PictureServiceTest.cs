@@ -24,6 +24,7 @@ namespace Tests.ServiceTest
 
         User testUserService = new User();
         UserAquarium userAquarium = new UserAquarium();
+        Picture testPicture = new Picture();
 
         [SetUp]
         public async Task SetUp()
@@ -31,7 +32,7 @@ namespace Tests.ServiceTest
             testUserService = new User("testUserService@mail.com", "TestService", "TestService", "TestPW123");
             testAnimal = new Animal("Vikis Fische", "DoriTest", "Docktorfisch", 1, "My Little Dori", true);
             testCoral = new Coral("Vikis Fische", "TestCorale", "StabCoral", 10, "This is a Stab Coral", CoralType.Hardcoral);
-            aquarium = new Aquarium("VikisFische", 65, 150, 150, 500, WaterType.Saltwater);
+            aquarium = new Aquarium("Vikis Fische", 65, 150, 150, 500, WaterType.Saltwater);
             aquarium1 = new Aquarium("Vikis Andere Fische", 65, 150, 150, 500, WaterType.Saltwater);
 
             await uow.User.InsertOneAsync(testUserService);
@@ -44,6 +45,15 @@ namespace Tests.ServiceTest
 
             await uow.UserAquarium.InsertOneAsync(userAquarium);
 
+            //Adding Picture
+            PictureService pictureService = new PictureService(uow, uow.Picture, null);
+            PictureRequest request = new PictureRequest();
+            request.Description = "die kleine Dori";
+            byte[] bytes = System.IO.File.ReadAllBytes(@"/Users/viki/Documents/FH/ADV-SWE/AquariumManagement/Pictures/dori.jpg");
+            IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "image.jpg");
+            request.FormFile = file;
+            ItemResponseModel<PictureResponse> pics = await pictureService.AddPicture("Vikis Fishe", request);
+            testPicture = pics.Data.Picture;
         }
 
         [TearDown]
@@ -100,6 +110,41 @@ namespace Tests.ServiceTest
 
             pictures = uow.Picture.FilterBy(x => true).ToList();
             Assert.IsFalse(pics.HasError);
+        }
+
+        [Test]
+        public async Task GetPicture()
+        {
+            PictureService pictureService = new PictureService(uow, uow.Picture, null);
+
+            ItemResponseModel<PictureResponse> foundPicture = await pictureService.GetPicture(testPicture.ID);
+
+            Assert.IsTrue(foundPicture.Data.Picture.ID.Equals(testPicture.ID));
+
+        }
+
+        [Test]
+        public async Task GetPictureForAquarium()
+        {
+            PictureService pictureService = new PictureService(uow, uow.Picture, null);
+
+            ItemResponseModel<List<PictureResponse>> foundPics = await pictureService.GetForAquarium(aquarium.Name);
+
+            Assert.IsTrue(foundPics.Data.First().Picture.Aquarium.Equals(aquarium.Name));
+
+        }
+
+        [Test]
+        public async Task DeletePicture()
+        {
+            PictureService pictureService = new PictureService(uow, uow.Picture, null);
+
+            await pictureService.Delete(testPicture.ID);
+
+            Picture pictureFound = await uow.Picture.FindByIdAsync(testPicture.ID);
+
+            Assert.IsEmpty(pictureFound.ID);
+
         }
         //Get Picture
         //Get Picture For Aquarium

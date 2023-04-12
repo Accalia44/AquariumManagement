@@ -1,5 +1,4 @@
-﻿
-using DAL;
+﻿using DAL;
 using DAL.Entities;
 using DAL.Repository;
 using Services.Models.Response;
@@ -31,6 +30,13 @@ public class AquariumService : Service<Aquarium>
     {
         if (entity != null)
         {
+            var searchedAquarium = await repository.FindOneAsync(x => x.Name.Equals(entity.Name));
+
+            if (!String.IsNullOrEmpty(searchedAquarium.Name))
+            {
+                modelStateWrapper.AddError("Aquarium Exists", "Pleaes use a different Name, this name already exists");
+            }
+
             if (String.IsNullOrEmpty(entity.Name))
             {
                 modelStateWrapper.AddError("No Name", "Please provide a name");

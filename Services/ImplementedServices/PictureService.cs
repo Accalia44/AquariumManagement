@@ -51,10 +51,6 @@ namespace Services.ImplementedServices
                         ObjectId pictureId = await unitOfWork.Context.GridFSBucket.UploadFromBytesAsync(filename, binaries);
 
                         Picture pic = new Picture(pictureId.ToString(), aquarium, pictureRequest.Description, typ);
-                        /*pic.PictureID = pictureId.ToString();
-                        pic.Description = pictureRequest.Description;
-                        pic.Aquarium = aquarium;
-                        pic.ContentType = typ;*/
 
                         Picture savedPicture = await unitOfWork.Picture.InsertOneAsync(pic);
                         var bytes = await unitOfWork.Context.GridFSBucket.DownloadAsBytesAsync(pictureId);
@@ -84,15 +80,18 @@ namespace Services.ImplementedServices
             return returnModel;
         }
 
-        public async Task<ItemResponseModel<Picture>> GetPicture(string id)
+        public async Task<ItemResponseModel<PictureResponse>> GetPicture(string id)
         {
-            var response = new ItemResponseModel<Picture>();
+            var response = new ItemResponseModel<PictureResponse>();
 
             if (id != null)
             {
-                var picture = await Get(id);
+                    var picture = await Get(id);
 
-                response.Data = picture;
+                byte[] bytes =  await unitOfWork.Context.GridFSBucket.DownloadAsBytesAsync(new ObjectId(picture.ID));
+
+                response.Data.Picture = picture;
+                response.Data.Bytes = bytes;
                 response.HasError = false;
             }
             else
@@ -145,7 +144,7 @@ namespace Services.ImplementedServices
 
                     foreach (Picture i in foundPictures)
                     {
-                        var bytes = await unitOfWork.Context.GridFSBucket.DownloadAsBytesAsync(i.PictureID);
+                        var bytes = await unitOfWork.Context.GridFSBucket.DownloadAsBytesAsync(new ObjectId(i.ID));
                         PictureResponse responsePicture = new PictureResponse();
                         responsePicture.Picture = i;
                         responsePicture.Bytes = bytes;
