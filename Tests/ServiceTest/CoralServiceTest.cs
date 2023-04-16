@@ -19,7 +19,6 @@ namespace Tests.ServiceTest
         Coral testCoral = new Coral();
         Coral testCoral1 = new Coral();
         Coral testCoral2 = new Coral();
-        Coral emptyCoralTypeCoral = new Coral();
 
         Aquarium aquariumTest = new Aquarium();
         Aquarium aquarium = new Aquarium();
@@ -60,7 +59,7 @@ namespace Tests.ServiceTest
             await coralService.SetModelState(modelState.Object);
 
             ItemResponseModel<Coral> fromservice = await coralService.AddCoral(testCoral);
-            Assert.NotNull(fromservice);
+            Assert.That(fromservice.Data.Name, Is.EqualTo(testCoral.Name));
 
             await TearDown();
 
@@ -93,7 +92,7 @@ namespace Tests.ServiceTest
             AquariumItem insertedGettingCorals = await uow.AquariumItem.InsertOneAsync(testCoral1);
             await uow.AquariumItem.InsertOneAsync(testCoral2);
 
-            ItemResponseModel<List<AquariumItem>> gettingAllCorals = await coralService.GetCoral(aquariumTest);
+            ItemResponseModel<List<Coral>> gettingAllCorals = await coralService.GetCoral(aquariumTest);
 
             Assert.IsTrue(gettingAllCorals.Data.First().Aquarium == aquariumTest.Name);
 

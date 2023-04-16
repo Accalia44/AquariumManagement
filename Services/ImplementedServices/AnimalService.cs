@@ -40,15 +40,15 @@ namespace Services.ImplementedServices
             }        
         }
 
-        public async Task<ItemResponseModel<List<AquariumItem>>> GetAnimal(Aquarium entity)
+        public async Task<ItemResponseModel<List<Animal>>> GetAnimal(Aquarium entity)
         {
-            var response = new ItemResponseModel<List<AquariumItem>>();
+            var response = new ItemResponseModel<List<Animal>>();
 
             if (entity != null)
             {
-                var coralList = await Get();
+                var animalList = await Get();
 
-                response.Data = coralList.Where(x => x.Aquarium == entity.Name).Where(a => a.GetType() == typeof(Animal)).ToList();
+                response.Data = animalList.Where(x => x.Aquarium == entity.Name).Where(a => a.GetType() == typeof(Animal)).ToList().Cast<Animal>().ToList();
                 response.HasError = false;
             }
             else

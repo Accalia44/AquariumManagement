@@ -27,8 +27,8 @@ namespace Tests.ServiceTest
         public async Task SetUp()
         {
             testUserService = new User("testUserService@mail.com", "TestService", "TestService", "TestPW123");
-            testAnimal = new Animal("Vikis Fische", "DoriTest", "Docktorfisch", 1, "My Little Dori", true);
-            testCoral = new Coral("Vikis Fische", "TestCorale", "StabCoral", 10, "This is a Stab Coral", CoralType.Hardcoral);
+            testAnimal = new Animal("VikisFische", "DoriTest", "Docktorfisch", 1, "My Little Dori", true);
+            testCoral = new Coral("VikisFische", "TestCorale", "StabCoral", 10, "This is a Stab Coral", CoralType.Hardcoral);
             aquarium = new Aquarium("VikisFische", 65, 150, 150, 500, WaterType.Saltwater);
             aquarium1 = new Aquarium("VikisFische", 65, 150, 150, 500, WaterType.Saltwater);
 

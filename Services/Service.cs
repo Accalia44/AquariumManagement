@@ -26,7 +26,7 @@ namespace Services
 			this.globalService = service;
 		}
 
-		public virtual async Task<ActionResponseModel> Delete(String id)
+		public virtual async Task<ActionResponseModel> Delete(string id)
 		{
 			await repository.DeleteByIdAsync(id);
 			ActionResponseModel returnval = new ActionResponseModel();
@@ -42,7 +42,7 @@ namespace Services
 
 		public abstract Task<ItemResponseModel<TEntity>> Create(TEntity entity);
 
-		public abstract Task<ItemResponseModel<TEntity>> Update(String id, TEntity entity);
+		public abstract Task<ItemResponseModel<TEntity>> Update(string id, TEntity entity);
 
 		public abstract Task<Boolean> Validate(TEntity entity);
 
@@ -73,7 +73,7 @@ namespace Services
 			return response;
 		}
 
-        public virtual async Task<ItemResponseModel<TEntity>> UpdateHandler(String id, TEntity entity)
+        public virtual async Task<ItemResponseModel<TEntity>> UpdateHandler(string id, TEntity entity)
         {
             ItemResponseModel<TEntity> response = new ItemResponseModel<TEntity>();
 
@@ -110,7 +110,7 @@ namespace Services
             return response;
         }
 
-		public async virtual Task<TEntity> Get(String id)
+		public async virtual Task<TEntity> Get(string id)
 		{
 			return await this.repository.FindByIdAsync(id);
 		}

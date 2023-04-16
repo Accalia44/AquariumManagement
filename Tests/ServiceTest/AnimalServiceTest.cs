@@ -107,7 +107,7 @@ namespace Tests.ServiceTest
             AquariumItem insertedGettingCorals = await uow.AquariumItem.InsertOneAsync(testAnimal1);
             await uow.AquariumItem.InsertOneAsync(animalForFinding);
 
-            ItemResponseModel<List<AquariumItem>> gettingAllAnimals = await animalService.GetAnimal(aquariumTest);
+            ItemResponseModel<List<Animal>> gettingAllAnimals = await animalService.GetAnimal(aquariumTest);
 
             Assert.IsTrue(gettingAllAnimals.Data.First().Aquarium == aquariumTest.Name);
 

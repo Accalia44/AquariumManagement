@@ -12,6 +12,7 @@ public class AquariumService : Service<Aquarium>
 
     public override async Task<ItemResponseModel<Aquarium>> Create(Aquarium entity)
     {
+        Console.WriteLine("hello");
         ItemResponseModel<Aquarium> response = new ItemResponseModel<Aquarium>();
         response.Data = await repository.InsertOneAsync(entity);
         response.HasError = false;
@@ -24,6 +25,42 @@ public class AquariumService : Service<Aquarium>
         response.Data = await repository.UpdateOneAsync(entity);
         response.HasError = false;
         return response;
+    }
+
+    public async Task<ItemResponseModel<List<Aquarium>>> GetForUser(User user)
+    {
+        ItemResponseModel<List<Aquarium>> response = new ItemResponseModel<List<Aquarium>>();
+
+        if (user != null)
+        {
+            var userAquarium = unitOfWork.UserAquarium.FilterBy(x => x.UserID == user.ID);
+
+            var aquarium = unitOfWork.Aquarium.FilterBy(a => userAquarium.Any(usr => usr.AquariumID == a.ID));
+
+            response.Data = aquarium.ToList();
+            response.HasError = false;
+        }
+        else
+        {
+            response.HasError = true;
+            response.ErrorMessages.Add("No User provided.");
+        }
+        return response;
+    }
+
+    public override async Task<Aquarium> Get(string id)
+    {
+        Aquarium found = await this.repository.FindByIdAsync(id);
+        if(!String.IsNullOrEmpty(found.ID))
+        {
+
+        }
+        else
+        {
+            modelStateWrapper.AddError("No Aquarium found", "Please provide an existing Aquarium");
+        }
+        return found;
+
     }
 
     public override async Task<bool> Validate(Aquarium entity)
@@ -69,23 +106,6 @@ public class AquariumService : Service<Aquarium>
         return modelStateWrapper.IsValid;
     }
 
-    public async Task<ItemResponseModel<List<Aquarium>>> GetForUser(User entity)
-    {
-        var response = new ItemResponseModel<List<Aquarium>>();
 
-        if (entity != null)
-        {
-            var userAquarium = unitOfWork.UserAquarium.FilterBy(x => x.UserID == entity.ID);
-            var aquarium = this.repository.FilterBy(a => userAquarium.Any(usr => usr.AquariumID == a.ID));
-            response.Data = aquarium.ToList();
-            response.HasError = false;
-        }
-        else
-        {
-            response.HasError = true;
-            response.ErrorMessages.Add("No User provided.");
-        }
-        return response;
-    }
 }
 

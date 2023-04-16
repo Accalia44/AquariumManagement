@@ -28,7 +28,7 @@ namespace Services.ImplementedServices
             var foundAquariumItem = await this.repository.FindByIdAsync(entity.ID);
             if (foundAquariumItem != null)
             {
-                response.Data = entity;
+                response.Data = await repository.UpdateOneAsync(entity); ;
                 response.HasError = false;
                 return response;
             }
@@ -39,68 +39,65 @@ namespace Services.ImplementedServices
                 return response;
             }
         }
-    
 
-        public async override Task<bool> Validate(AquariumItem entity)
+        public override async Task<AquariumItem> Get(string id)
         {
-            if (entity != null)
+            AquariumItem found = await this.repository.FindByIdAsync(id);
+            if (!String.IsNullOrEmpty(found.ID))
             {
-                if (String.IsNullOrEmpty(entity.Aquarium))
-                {
-                    modelStateWrapper.AddError("No Aquarium", "Please provide an Aquarium");
-                }
 
-                if (String.IsNullOrEmpty(entity.Name))
-                {
-                    modelStateWrapper.AddError("No Name", "Please provide a Name for your Animal");
-                }
-                if (String.IsNullOrEmpty(entity.Species))
-                {
-                    modelStateWrapper.AddError("No Species", "Please provide a Species");
-                }
             }
             else
             {
-                modelStateWrapper.AddError("No AquariumItem", "No AquariumItem was provided");
-
+                modelStateWrapper.AddError("No AquariumItem found", "Please provide an existing AquariumItem");
             }
-            return modelStateWrapper.IsValid;
+            return found;
+
         }
 
         public async Task<ItemResponseModel<AquariumItem>> AddAquariumItem(AquariumItem entity)
         {
+
             ItemResponseModel<AquariumItem> response = new ItemResponseModel<AquariumItem>();
 
-            if (await Validate(entity))
+            var foundAquarium = await unitOfWork.Aquarium.FindOneAsync(x => x.Name == entity.Aquarium);
+
+            if (foundAquarium != null)
             {
-                var aquarium = entity.Aquarium;
-                var foundAquarium = await unitOfWork.Aquarium.FindOneAsync(x => x.Name == aquarium);
-
-                if (foundAquarium != null)
-                {
-                    AquariumItem newAquariumItem = await this.unitOfWork.AquariumItem.InsertOneAsync(entity);
-                    response.Data = newAquariumItem;
-                    response.HasError = false;
-                    return response;
-                }
-                else
-                {
-                    modelStateWrapper.AddError("No Aquarium", "This Aquarium does not exist");
-                    response.HasError = true;
-                    return response;
-                }
-
+                response = await CreateHandler(entity); 
+                response.HasError = false;
             }
             else
             {
+                modelStateWrapper.AddError("No Aquarium", "This Aquarium does not exist");
                 response.HasError = true;
-                response.ErrorMessages = modelStateWrapper.Errors.Values.ToList();
-                return response;
             }
 
-           
+            return response;
         }
 
+        public override async Task<bool> Validate(AquariumItem entry)
+        {
+            if (entry != null)
+            {
+                if (entry.Inserted <= DateTime.MinValue)
+                {
+                    modelStateWrapper.AddError("InsertedMissing", "No insert date was set");
+                }
+                if (entry.Amount <= 0)
+                {
+                    modelStateWrapper.AddError("AmountMissing", "Amount must be greater 0");
+                }
+            }
+            else
+            {
+                modelStateWrapper.AddError("ItemEmpty", "Object is empty");
+            }
+            Console.WriteLine("test");
+            Console.WriteLine(modelStateWrapper.IsValid);
+            return modelStateWrapper.IsValid;
+
+        }
 
     }
 }

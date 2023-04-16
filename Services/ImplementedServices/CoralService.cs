@@ -3,6 +3,7 @@ using DAL;
 using DAL.Entities;
 using DAL.Repository;
 using Services.Models.Response;
+using SharpCompress.Common;
 
 namespace Services.ImplementedServices
 {
@@ -12,43 +13,49 @@ namespace Services.ImplementedServices
 
         public async Task<ItemResponseModel<Coral>> AddCoral(Coral entity)
         {
+            Console.WriteLine(entity.Name);
             ItemResponseModel<Coral> response = new ItemResponseModel<Coral>();
+            ItemResponseModel<AquariumItem> resp = await base.AddAquariumItem(entity);
+            //Console.WriteLine(resp.Data.Name);
 
-            if (await Validate(entity))
+            var aquariumExist = await unitOfWork.Aquarium.FindOneAsync(x => x.Name == entity.Aquarium);
+
+            if (aquariumExist != null)
             {
-                if (String.IsNullOrEmpty(entity.CoralType.ToString()))
+                if (!String.IsNullOrEmpty(entity.CoralType.ToString()))
                 {
-                    response.HasError = true;
-                    modelStateWrapper.AddError("No Coral", "No Coral Type was provided");
-                    return response;
+                    if (resp.HasError == false)
+                    {
+                        
+                        response.Data = resp.Data as Coral;
+                        response.HasError = false;
+                    }
 
                 }
                 else
                 {
-                    await this.AddAquariumItem(entity);
-                    response.Data = entity;
-                    response.HasError = false;
-                    return response;
+                    response.HasError = true;
+                    modelStateWrapper.AddError("No CoralType", "Please provide a Coral Type");
+
                 }
             }
             else
             {
                 response.HasError = true;
-                response.ErrorMessages = modelStateWrapper.Errors.Values.ToList();
-                return response;
+                response.ErrorMessages.Add("No Aquarium was found with that name");
             }
+            return response;
 
         }
-
-        public async Task<ItemResponseModel<List<AquariumItem>>> GetCoral(Aquarium entity)
+        public async Task<ItemResponseModel<List<Coral>>> GetCoral(Aquarium entity)
         {
-            var response = new ItemResponseModel<List<AquariumItem>>();
+            var response = new ItemResponseModel<List<Coral>>();
 
             if (entity != null)
             {
                 var coralList = await Get();
 
-                response.Data = coralList.Where(x => x.Aquarium == entity.Name).Where(a => a.GetType() == typeof(Coral)).ToList();
+                response.Data = coralList.Where(x => x.Aquarium == entity.Name).Where(a => a.GetType() == typeof(Coral)).ToList().Cast<Coral>().ToList();
                 response.HasError = false;
             }
             else
@@ -59,31 +66,20 @@ namespace Services.ImplementedServices
             return response;
         }
 
-
-
-        public async Task<bool> Validate(Coral entity)
+        public override async Task<bool> Validate(AquariumItem entry)
         {
-            if (entity != null)
+            if (entry.GetType() == typeof(Coral))
             {
-                var aquariumExist = await unitOfWork.Aquarium.FindOneAsync(x => x.Name == entity.Aquarium);
-
-                if (aquariumExist != null)
-                {
-
-                }
-                else
-                {
-                    modelStateWrapper.AddError("No Aquarium", "No aquarium was found, please ensure your Aquarium is inserted first");
-
-                }
+                return await base.Validate(entry);
             }
             else
             {
-                modelStateWrapper.AddError("No Animal", "No animal was provided");
-
+                modelStateWrapper.AddError("NotValid", "Item is no Coral");
             }
+
             return modelStateWrapper.IsValid;
         }
+
     }
 }
 

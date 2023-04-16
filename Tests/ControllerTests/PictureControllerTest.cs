@@ -2,19 +2,20 @@
 using DAL;
 using DAL.Entities;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Moq;
-using Services;
+using System.Security.Claims;
 using Services.ImplementedServices;
 using Services.Models.Request;
 using Services.Models.Response;
+using API.Controllers;
+using Services;
 
-namespace Tests.ServiceTest
+namespace Tests.ControllerTests
 {
-	public class PictureServiceTest
-	{
-
+    public class PictureControllerTest
+    {
         UnitOfWork uow = new UnitOfWork();
+
         Coral testCoral = new Coral();
 
         Animal testAnimal = new Animal();
@@ -26,10 +27,30 @@ namespace Tests.ServiceTest
         UserAquarium userAquarium = new UserAquarium();
         Picture testPicture = new Picture();
 
+
+        public IHttpContextAccessor Create(ClaimsPrincipal c)
+
+        {
+            var mock = new Mock<IHttpContextAccessor>();
+            mock.Setup(o => o.HttpContext.User).Returns(c);
+            return mock.Object;
+
+        }
+        public ClaimsPrincipal Login(string username)
+
+        {
+            Claim claim = new Claim(ClaimTypes.Email, username);
+            List<Claim> claims = new List<Claim>();
+            claims.Add(claim);
+            ClaimsIdentity id = new ClaimsIdentity(claims);
+            ClaimsPrincipal claimsPrincipal = new ClaimsPrincipal(id);
+            return claimsPrincipal;
+        }
+
         [SetUp]
         public async Task SetUp()
         {
-            testUserService = new User("testUserService@mail.com", "TestService", "TestService", "TestPW123");
+            testUserService = new User("testUser@mail.com", "TestService", "TestService", "TestPW123");
             testAnimal = new Animal("Vikis Fische", "DoriTest", "Docktorfisch", 1, "My Little Dori", true);
             testCoral = new Coral("Vikis Fische", "TestCorale", "StabCoral", 10, "This is a Stab Coral", CoralType.Hardcoral);
             aquarium = new Aquarium("Vikis Fische", 65, 150, 150, 500, WaterType.Saltwater);
@@ -54,6 +75,7 @@ namespace Tests.ServiceTest
             request.FormFile = file;
             ItemResponseModel<PictureResponse> pics = await pictureService.AddPicture("Vikis Fishe", request);
             testPicture = pics.Data.Picture;
+
         }
 
         [TearDown]
@@ -65,13 +87,16 @@ namespace Tests.ServiceTest
             await uow.AquariumItem.DeleteByIdAsync(testCoral.ID);
             await uow.User.DeleteByIdAsync(testUserService.ID);
             await uow.UserAquarium.DeleteByIdAsync(userAquarium.ID);
-
+            await uow.Picture.DeleteByIdAsync(testPicture.ID);
         }
+
 
         [Test]
         public async Task UploadPicture()
         {
-            PictureService pictureService = new PictureService(uow, uow.Picture, null);
+            GlobalService serviceGlobal = new GlobalService(uow);
+
+            PictureController pictureController = new PictureController(serviceGlobal, Create(Login("testUser@mail.com")));
 
             PictureRequest request = new PictureRequest();
             request.Description = "die kleine Dori";
@@ -81,75 +106,55 @@ namespace Tests.ServiceTest
             IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "image.jpg");
             request.FormFile = file;
 
-            List<Picture> pictures = uow.Picture.FilterBy(x => true).ToList();
-            int old = pictures.Count;
+            ItemResponseModel<PictureResponse> response = await pictureController.Create("VikisFische", request);
 
-            await pictureService.AddPicture("VikisFische", request);
+            Assert.IsTrue(response.Data.Picture.Description.Equals(request.Description));
+            await uow.Picture.DeleteByIdAsync(response.Data.Picture.ID);
 
-            pictures = uow.Picture.FilterBy(x => true).ToList();
-            Assert.That(old + 1, Is.EqualTo(pictures.Count));
-        }
-
-        [Test]
-        public async Task UploadPictureWithValidation()
-        {
-            PictureService pictureService = new PictureService(uow, uow.Picture, null);
-
-            PictureRequest request = new PictureRequest();
-            request.Description = "die kleine Dori";
-
-            byte[] bytes = System.IO.File.ReadAllBytes(@"/Users/viki/Documents/FH/ADV-SWE/AquariumManagement/Pictures/dori.jpg");
-
-            IFormFile file = new FormFile(new MemoryStream(bytes), 0, bytes.Length, "Data", "image.jpg");
-            request.FormFile = file;
-
-            List<Picture> pictures = uow.Picture.FilterBy(x => true).ToList();
-            int old = pictures.Count;
-
-            ItemResponseModel<PictureResponse> pics = await pictureService.AddPicture("Vikis Fishe", request); 
-
-            pictures = uow.Picture.FilterBy(x => true).ToList();
-            Assert.IsFalse(pics.HasError);
         }
 
         //Error not found
         [Test]
         public async Task GetPicture()
         {
-            PictureService pictureService = new PictureService(uow, uow.Picture, null);
+            GlobalService serviceGlobal = new GlobalService(uow);
 
-            ItemResponseModel<PictureResponse> foundPicture = await pictureService.GetPicture(testPicture.ID);
+            PictureController pictureController = new PictureController(serviceGlobal, Create(Login("testUser@mail.com")));
+
+            ItemResponseModel<PictureResponse> foundPicture = await pictureController.Get(testPicture.ID);
 
             Assert.IsTrue(foundPicture.Data.Picture.ID.Equals(testPicture.ID));
 
         }
-        //Error not found
+
+        //Error System.InvalidOperationException : Sequence contains no elements
         [Test]
         public async Task GetPictureForAquarium()
         {
-            PictureService pictureService = new PictureService(uow, uow.Picture, null);
+            GlobalService serviceGlobal = new GlobalService(uow);
 
-            ItemResponseModel<List<PictureResponse>> foundPics = await pictureService.GetForAquarium(aquarium.Name);
+            PictureController pictureController = new PictureController(serviceGlobal, Create(Login("testUser@mail.com")));
+
+            ItemResponseModel<List<PictureResponse>> foundPics = await pictureController.GetForAquarium(aquarium.Name);
 
             Assert.IsTrue(foundPics.Data.First().Picture.Aquarium.Equals(aquarium.Name));
 
         }
 
-        //Error GridFS File Not found
+        //Error System.InvalidOperationException : Sequence contains no elements
         [Test]
         public async Task DeletePicture()
         {
-            PictureService pictureService = new PictureService(uow, uow.Picture, null);
+            GlobalService serviceGlobal = new GlobalService(uow);
 
-            ActionResponseModel delete = await pictureService.Delete(testPicture.ID);
+            PictureController pictureController = new PictureController(serviceGlobal, Create(Login("testUser@mail.com")));
 
-            Assert.IsTrue(delete.Success);
+            ActionResponseModel deleted = await pictureController.Delete(testPicture.ID);
+
+            Assert.IsTrue(deleted.Success);
+
 
         }
-        //Get Picture
-        //Get Picture For Aquarium
-        //Delete Picture
-        //Tests schreiben
     }
 }
 
