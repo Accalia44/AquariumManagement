@@ -1,6 +1,7 @@
 ﻿using System;
 using DAL;
 using DAL.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.Models.Request;
@@ -13,14 +14,28 @@ namespace API.Controllers
 		UserServices userService = null;
         UnitOfWork uow = new UnitOfWork();
 
-        public UserController(GlobalService service, IHttpContextAccessor accessor ) : base(service.UserService, accessor){}
+        public UserController(GlobalService service, IHttpContextAccessor accessor ) : base(service.UserService, accessor)
+		{
+			this.userService = service.UserService;
+		}
 
 		[HttpPost]
-		public async Task<ActionResult<ItemResponseModel<UserResponse>>> Login([FromBody]LoginRequest request)
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<ItemResponseModel<UserResponse>>> Login([FromBody]LoginRequest request)
 		{
-			userService = new UserServices(uow, uow.User, null);
 			return await userService.Login(request);
 		}
-	}
+		/*
+        public async Task<ItemResponseModel<User>> Update(string id, User entity)
+		{
+
+
+		}
+
+		Delete/Register
+		*/
+    }
 }
 

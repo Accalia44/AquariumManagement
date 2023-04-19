@@ -121,7 +121,7 @@ namespace Tests.ControllerTests
 
             PictureController pictureController = new PictureController(serviceGlobal, Create(Login("testUser@mail.com")));
 
-            ItemResponseModel<PictureResponse> foundPicture = await pictureController.Get(testPicture.ID);
+            ItemResponseModel<PictureResponse> foundPicture = await pictureController.GetPicture(testPicture.ID);
 
             Assert.IsTrue(foundPicture.Data.Picture.ID.Equals(testPicture.ID));
 
@@ -141,7 +141,6 @@ namespace Tests.ControllerTests
 
         }
 
-        //Error System.InvalidOperationException : Sequence contains no elements
         [Test]
         public async Task DeletePicture()
         {

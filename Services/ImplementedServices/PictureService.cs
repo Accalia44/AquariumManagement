@@ -80,27 +80,30 @@ namespace Services.ImplementedServices
             return returnModel;
         }
 
-        public async Task<ItemResponseModel<PictureResponse>> GetPicture(string id)
+        public async Task<ItemResponseModel<PictureResponse>> Get(string id)
         {
-            var response = new ItemResponseModel<PictureResponse>();
+            ItemResponseModel<PictureResponse> result = new ItemResponseModel<PictureResponse>();
 
             if (id != null)
             {
-                    var picture = await Get(id);
+                Picture picture = await repository.FindByIdAsync(id);
 
-                byte[] bytes =  await unitOfWork.Context.GridFSBucket.DownloadAsBytesAsync(new ObjectId(picture.ID));
+                var bytes = await unitOfWork.Context.GridFSBucket.DownloadAsBytesAsync(picture.PictureID);
 
-                response.Data.Picture = picture;
-                response.Data.Bytes = bytes;
-                response.HasError = false;
+                PictureResponse response = new PictureResponse();
+                response.Picture = picture;
+                response.Bytes = bytes;
+                result.Data = response;
             }
             else
             {
-                response.HasError = true;
+                result.HasError = true;
                 modelStateWrapper.AddError("No Picture", "Picture was not found!");
             }
-            return response;
+            return result;
         }
+
+     
 
         public async Task<ActionResponseModel> Delete(string id)
         {
@@ -111,26 +114,44 @@ namespace Services.ImplementedServices
                 Picture foundPicture = await repository.FindByIdAsync(id);
                 if (foundPicture != null)
                 {
-                    await unitOfWork.Context.GridFSBucket.DeleteAsync(new ObjectId(id));
-                    deleted.Success = true;
+                    try
+                    {
+                        await unitOfWork.Context.GridFSBucket.DeleteAsync(new ObjectId(foundPicture.PictureID));
+                        await repository.DeleteByIdAsync(id);
+
+                        deleted.Success = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Warning(ex, "Delete Failed");
+                        deleted.Success = false;
+                        deleted.HasError = true;
+                        deleted.ErrorMessages.Add("Delete Failed");
+                    }
 
                 }
                 else
                 {
-                    modelStateWrapper.AddError("No Picture", "Picture was not found!");
+                    deleted.Success = false;
+                    deleted.HasError = true;
+                    deleted.ErrorMessages.Add("Image not found");
                 }
 
             }
             else
             {
-                modelStateWrapper.AddError("No ID", "Id was not provided!");
+                deleted.Success = false;
+                deleted.HasError = true;
+                deleted.ErrorMessages.Add("ID was empty");
             }
 
             return deleted;
         }
 
+
         public async Task<ItemResponseModel<List<PictureResponse>>> GetForAquarium(string aquarium)
         {
+
             ItemResponseModel<List<PictureResponse>> returnModel = new ItemResponseModel<List<PictureResponse>>();
 
             if (!String.IsNullOrEmpty(aquarium))
@@ -144,7 +165,7 @@ namespace Services.ImplementedServices
 
                     foreach (Picture i in foundPictures)
                     {
-                        var bytes = await unitOfWork.Context.GridFSBucket.DownloadAsBytesAsync(new ObjectId(i.ID));
+                        var bytes = await unitOfWork.Context.GridFSBucket.DownloadAsBytesAsync(i.PictureID);
                         PictureResponse responsePicture = new PictureResponse();
                         responsePicture.Picture = i;
                         responsePicture.Bytes = bytes;
@@ -183,7 +204,5 @@ namespace Services.ImplementedServices
         }
     }
 
-
-    //im add aquarium einen check dass es das nur einmal geben darf mit dem namen
 }
 

@@ -55,7 +55,7 @@ namespace Tests.ServiceTest
             ItemResponseModel<PictureResponse> pics = await pictureService.AddPicture("Vikis Fishe", request);
             testPicture = pics.Data.Picture;
         }
-
+        
         [TearDown]
         public async Task TearDown()
         {
@@ -65,6 +65,7 @@ namespace Tests.ServiceTest
             await uow.AquariumItem.DeleteByIdAsync(testCoral.ID);
             await uow.User.DeleteByIdAsync(testUserService.ID);
             await uow.UserAquarium.DeleteByIdAsync(userAquarium.ID);
+            await uow.Picture.DeleteByIdAsync(testPicture.ID);
 
         }
 
@@ -118,12 +119,12 @@ namespace Tests.ServiceTest
         {
             PictureService pictureService = new PictureService(uow, uow.Picture, null);
 
-            ItemResponseModel<PictureResponse> foundPicture = await pictureService.GetPicture(testPicture.ID);
+            ItemResponseModel<PictureResponse> foundPicture = await pictureService.Get(testPicture.ID);
 
             Assert.IsTrue(foundPicture.Data.Picture.ID.Equals(testPicture.ID));
 
         }
-        //Error not found
+        //System.InvalidOperationException : Sequence contains no elements
         [Test]
         public async Task GetPictureForAquarium()
         {
@@ -135,7 +136,7 @@ namespace Tests.ServiceTest
 
         }
 
-        //Error GridFS File Not found
+        
         [Test]
         public async Task DeletePicture()
         {
@@ -146,10 +147,7 @@ namespace Tests.ServiceTest
             Assert.IsTrue(delete.Success);
 
         }
-        //Get Picture
-        //Get Picture For Aquarium
-        //Delete Picture
-        //Tests schreiben
+
     }
 }
 

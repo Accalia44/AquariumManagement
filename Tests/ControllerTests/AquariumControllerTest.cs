@@ -93,7 +93,7 @@ namespace Tests.ControllerTests
 
             AquariumController aquariumController = new AquariumController(aquariumServiceGlobal, Create(Login("testUser@mail.com")));
 
-            ItemResponseModel<Aquarium> insertAquarium = await aquariumController.Create(aquarium);
+            ItemResponseModel<Aquarium> insertAquarium = await aquariumController.CreateAquarium(aquarium);
 
             Assert.IsTrue(!String.IsNullOrEmpty(insertAquarium.Data.Name));
 
@@ -107,7 +107,7 @@ namespace Tests.ControllerTests
 
             AquariumController aquariumController = new AquariumController(aquariumServiceGlobal, Create(Login("testUser@mail.com")));
 
-            ItemResponseModel<Aquarium> foundAquarium = await aquariumController.Get(aquarium.ID);
+            ItemResponseModel<Aquarium> foundAquarium = await aquariumController.GetAquarium(aquarium.ID);
 
             Assert.IsTrue(aquarium.ID.Equals(foundAquarium.Data.ID));
         }
@@ -133,7 +133,7 @@ namespace Tests.ControllerTests
 
             AquariumController aquariumController = new AquariumController(aquariumServiceGlobal, Create(Login("testUser@mail.com")));
 
-            ItemResponseModel<List<Aquarium>> foundAquariums = await aquariumController.ForUser(testUser);
+            ItemResponseModel<List<Aquarium>> foundAquariums = await aquariumController.ForUser(userName: testUser.Email);
 
             Console.WriteLine(foundAquariums.Data.First().Name);
 

@@ -12,7 +12,6 @@ public class AquariumService : Service<Aquarium>
 
     public override async Task<ItemResponseModel<Aquarium>> Create(Aquarium entity)
     {
-        Console.WriteLine("hello");
         ItemResponseModel<Aquarium> response = new ItemResponseModel<Aquarium>();
         response.Data = await repository.InsertOneAsync(entity);
         response.HasError = false;

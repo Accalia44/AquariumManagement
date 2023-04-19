@@ -110,7 +110,7 @@ namespace Tests.ControllerTests
 
             AquariumItemController aquariumItemController = new AquariumItemController(aquariumServiceGlobal, Create(Login("testUser@mail.com")));
 
-            ItemResponseModel<Coral> insertedCoral = await aquariumItemController.Create(testCoral);
+            ItemResponseModel<Coral> insertedCoral = await aquariumItemController.CreateCoral(testCoral);
 
             Assert.IsTrue(!String.IsNullOrEmpty(insertedCoral.Data.Name));
 
@@ -124,7 +124,7 @@ namespace Tests.ControllerTests
 
             AquariumItemController aquariumItemController = new AquariumItemController(aquariumServiceGlobal, Create(Login("testUser@mail.com")));
 
-            ItemResponseModel<AquariumItem> foundCoral = await aquariumItemController.Get(testCoral1.ID);
+            ItemResponseModel<AquariumItem> foundCoral = await aquariumItemController.GetAquariumItem(testCoral1.ID);
 
             Assert.IsTrue(testCoral.ID.Equals(foundCoral.Data.ID));
 
@@ -138,7 +138,7 @@ namespace Tests.ControllerTests
 
             AquariumItemController aquariumItemController = new AquariumItemController(aquariumServiceGlobal, Create(Login("testUser@mail.com")));
 
-            ItemResponseModel<List<Coral>> found = await aquariumItemController.GetAllCorals(aquarium);
+            ItemResponseModel<List<Coral>> found = await aquariumItemController.GetAllCorals(aquarium.ID);
 
             Assert.That(found.Data.First().Aquarium, Is.EqualTo(aquarium.Name));
 
@@ -152,7 +152,7 @@ namespace Tests.ControllerTests
 
             AquariumItemController aquariumItemController = new AquariumItemController(aquariumServiceGlobal, Create(Login("testUser@mail.com")));
 
-            ItemResponseModel<List<Animal>> found = await aquariumItemController.GetAllAnimals(aquarium);
+            ItemResponseModel<List<Animal>> found = await aquariumItemController.GetAllAnimals(aquarium.ID);
 
             Assert.That(found.Data.First().Aquarium, Is.EqualTo(aquarium.Name));
 

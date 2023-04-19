@@ -1,6 +1,7 @@
 ﻿using System;
 using DAL;
 using DAL.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Services;
 using Services.ImplementedServices;
@@ -13,20 +14,23 @@ namespace API.Controllers
 	{
         UnitOfWork uow = new UnitOfWork();
         PictureService pictureService = null;
-        public PictureController(GlobalService service, IHttpContextAccessor accessor) : base(service.PictureService, accessor) { }
-
-        //Picture - Create / Get / Delete
-        [HttpGet]
-        public async Task<ItemResponseModel<PictureResponse>> Get([FromBody] string id)
+        public PictureController(GlobalService service, IHttpContextAccessor accessor) : base(service.PictureService, accessor)
         {
-            //helperline
-            pictureService = new PictureService(uow, uow.Picture, null);
+            pictureService = service.PictureService;
+        }
 
+        [HttpGet("GetPicture")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ItemResponseModel<PictureResponse>> GetPicture([FromBody] string id)
+        {
             ItemResponseModel<PictureResponse> response = new ItemResponseModel<PictureResponse>();
 
             if (!String.IsNullOrEmpty(id))
             {
-                response = await pictureService.GetPicture(id);
+                response = await pictureService.Get(id);
                 response.HasError = false;
             }
             else
@@ -38,12 +42,13 @@ namespace API.Controllers
             return response;
         }
 
-        [HttpGet]
-        public async Task<ItemResponseModel<List<PictureResponse>>> GetForAquarium(string aquarium)
+        [HttpGet("GetForAquarium")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ItemResponseModel<List<PictureResponse>>> GetForAquarium([FromBody]string aquarium)
         {
-            //helperline
-            pictureService = new PictureService(uow, uow.Picture, null);
-
             ItemResponseModel<List<PictureResponse>> returnModel = new ItemResponseModel<List<PictureResponse>>();
 
             if (!String.IsNullOrEmpty(aquarium))
@@ -58,12 +63,13 @@ namespace API.Controllers
             return returnModel;
         }
 
-        [HttpPost]
-        public async Task<ItemResponseModel<PictureResponse>> Create([FromBody] string aquarium, PictureRequest pictureRequest)
+        [HttpPost("{id}")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ItemResponseModel<PictureResponse>> Create(string aquarium, [FromBody] PictureRequest pictureRequest)
         {
-            //helperline
-            pictureService = new PictureService(uow, uow.Picture, null);
-
             ItemResponseModel<PictureResponse> response = new ItemResponseModel<PictureResponse>();
             if (aquarium != null)
             {
@@ -80,8 +86,12 @@ namespace API.Controllers
             return response;
         }
 
-        [HttpDelete]
-        public async Task<ActionResponseModel> Delete([FromBody] string id)
+        [HttpDelete("{id}")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResponseModel> Delete(string id)
         {
             ActionResponseModel response = new ActionResponseModel();
 
